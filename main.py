@@ -54,8 +54,7 @@ for i, pessoa in enumerate(df_contatos['Pessoa']):
     esperar_elemento(barra_lateral)
 
     # Localiza o campo de texto
-    campo_mensagem = navegador.find_element(
-        By.CSS_SELECTOR, 'footer._2cYbV div._2lMWa div._13NKt')
+    campo_mensagem = navegador.find_element(By.CSS_SELECTOR, 'footer._2cYbV div._2lMWa div._13NKt')
 
     # Envia a mensgem
     campo_mensagem.send_keys(Keys.RETURN)
