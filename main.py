@@ -16,13 +16,22 @@ import time
 df_contatos = pd.read_excel('Enviar.xlsx')
 
 
-def esperar_elemento(elemento):
-    '''Aguarda o elemento aparecer na tela.'''
-    while len(elemento) == 0:
+def esperar_elemento(seletor_css):
+    '''Aguarda o elemento aparecer na tela.
+
+    Parâmetro(s):
+        seletor_css (str): seletor css para localizar os elementos.
+
+    Retorna:
+        (list): lista de elemento(s) encontrado(s)
+    '''
+    while len(navegador.find_elements(By.CSS_SELECTOR, seletor_css)) == 0:
         time.sleep(1)
 
     # Agurada mais 1s
     time.sleep(1)
+
+    return navegador.find_elements(By.CSS_SELECTOR, seletor_css)
 
 
 # Cria uma instância do Google Chrome
@@ -31,33 +40,34 @@ navegador = webdriver.Chrome()
 # Acessa o site do WhatsApp
 navegador.get('https://web.whatsapp.com/')
 
+# QR Code
+qr_code = esperar_elemento('div._25pwu div.b77wc span._30yMe svg')
+
 # A partir deste ponto, espera-se que o usuário escaneie o QR code
-barra_lateral = navegador.find_elements(By.ID, 'side')
-esperar_elemento(barra_lateral)
+barra_lateral = esperar_elemento('div#side')
 
-# Percorre a lista de pessoas
-for i, pessoa in enumerate(df_contatos['Pessoa']):
-    # Dados de contato da pessoa
-    numero = df_contatos.loc[i, 'Número']
-    mensagem = df_contatos.loc[i, 'Mensagem']
+if qr_code and barra_lateral:
+    # Percorre a lista de pessoas
+    for i, pessoa in enumerate(df_contatos['Pessoa']):
+        # Dados de contato da pessoa
+        numero = df_contatos.loc[i, 'Número']
+        mensagem = df_contatos.loc[i, 'Mensagem']
 
-    # Codificação da mensagem para passar no URL
-    texto = urllib.parse.quote(f'Oi, {pessoa}! {mensagem}')
+        # Codificação da mensagem para passar no URL
+        texto = urllib.parse.quote(f'Oi, {pessoa}! {mensagem}')
 
-    # Link para enviar a mensagem
-    link = f'https://web.whatsapp.com/send?phone={numero}&text={texto}'
+        # Link para enviar a mensagem
+        link = f'https://web.whatsapp.com/send?phone={numero}&text={texto}'
 
-    # Navega para o link
-    navegador.get(link)
+        # Navega para o link
+        navegador.get(link)
 
-    # Aguarda a barra lateral aparecer
-    esperar_elemento(barra_lateral)
+        # Aguarda a barra lateral aparecer
+        esperar_elemento('div#side')
 
-    # Localiza o campo de texto
-    campo_mensagem = navegador.find_element(By.CSS_SELECTOR, 'footer._2cYbV div._2lMWa div._13NKt')
+        # Localiza o campo de texto
+        campo_mensagem = esperar_elemento('div._3HQNh._1Ae7k button._4sWnG')
+        campo_mensagem[0].send_keys(Keys.RETURN)
 
-    # Envia a mensgem
-    campo_mensagem.send_keys(Keys.RETURN)
-
-    # Aguarda 10s antes de enviar a próxima mensagem
-    time.sleep(10)
+        # Aguarda 10s antes de enviar a próxima mensagem
+        time.sleep(10)
